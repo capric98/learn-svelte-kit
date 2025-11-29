@@ -1,11 +1,14 @@
 <script lang="ts">
+    import { page } from "$app/state";
+    import { goto } from "$app/navigation";
     import { Button } from "$lib/components/ui/button";
-    import * as Card from "$lib/components/ui/card";
     import { Input } from "$lib/components/ui/input";
     import { Label } from "$lib/components/ui/label";
     import { Checkbox } from "$lib/components/ui/checkbox";
-    import { Loader } from "lucide-svelte";
+    import * as Card from "$lib/components/ui/card";
     import { authClient } from "$lib/auth-client";
+    import { Loader } from "lucide-svelte";
+    import { toast } from "svelte-sonner";
 
     let email = "";
     let password = "";
@@ -13,10 +16,14 @@
     let rememberMe = false;
 
     async function handleSignIn() {
+        const returnUrl = page.url.searchParams.get("return_to") || "/";
+
         await authClient.signIn.email(
             {
                 email,
-                password
+                password,
+                rememberMe,
+                callbackURL: returnUrl
             },
             {
                 onRequest: () => {
@@ -24,6 +31,14 @@
                 },
                 onResponse: () => {
                     loading = false;
+                },
+                onSuccess: async () => {
+                    toast.success("Logged in successfully!");
+                    const returnTo = page.url.searchParams.get("return_to") || "/";
+                    await goto(returnTo, { invalidateAll: true });
+                },
+                onError: (ctx) => {
+                    toast.error(ctx.error.message || "Failed to sign in");
                 }
             }
         );

@@ -25,7 +25,6 @@
             email,
             password,
             name: `${firstName} ${lastName}`,
-            // image 字段已移除
             callbackURL: "/dashboard",
             fetchOptions: {
                 onRequest: () => {
@@ -38,7 +37,7 @@
                     toast.error(ctx.error.message);
                 },
                 onSuccess: async () => {
-                    goto("/dashboard");
+                    goto("/");
                 }
             }
         });

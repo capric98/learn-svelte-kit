@@ -12,8 +12,8 @@ import * as authSchema from "$lib/database/auth-schema";
 export const auth = betterAuth({
     database: drizzleAdapter(db, {
         provider: "pg",
-        schema: authSchema,
+        schema: authSchema
     }),
     plugins: [sveltekitCookies(getRequestEvent)], // make sure this is the last plugin in the array
-    emailAndPassword: { enabled: true },
+    emailAndPassword: { enabled: true }
 });
