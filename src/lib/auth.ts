@@ -13,8 +13,6 @@ import * as authSchema from "$lib/database/auth-schema";
 
 import { TURNSTILE_SECRET_KEY } from "$env/static/private";
 
-
-
 export const auth = betterAuth({
     emailAndPassword: { enabled: true },
     database: drizzleAdapter(db, {

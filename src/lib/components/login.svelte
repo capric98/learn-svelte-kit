@@ -18,14 +18,12 @@
     let rememberMe = false;
     let turnstileToken = "";
 
-
     function handleTurnstile(e: CustomEvent) {
         turnstileToken = e.detail.token;
     }
     function handleTurnstileExpired() {
         turnstileToken = "";
     }
-
 
     async function handleSignIn() {
         if (!turnstileToken) {
@@ -35,19 +33,12 @@
 
         const returnUrl = page.url.searchParams.get("return_to") || "/";
 
-        await authClient.signIn.email(
-            {
-                email,
-                password,
-                rememberMe,
-                callbackURL: returnUrl,
-                fetchOptions: {
-                    headers: {
-                        "x-captcha-response": turnstileToken
-                    }
-                }
-            },
-            {
+        await authClient.signIn.email({
+            email,
+            password,
+            rememberMe,
+            callbackURL: returnUrl,
+            fetchOptions: {
                 onRequest: () => {
                     loading = true;
                 },
@@ -61,9 +52,12 @@
                 },
                 onError: (ctx: any) => {
                     toast.error(ctx.error?.message || "Failed to sign in");
+                },
+                headers: {
+                    "x-captcha-response": turnstileToken
                 }
             }
-        );
+        });
     }
 </script>
 
@@ -81,7 +75,7 @@
                 <Input
                     id="email"
                     type="email"
-                    placeholder="m@example.com"
+                    placeholder="Email"
                     required
                     bind:value={email}
                 />
@@ -98,7 +92,7 @@
                 <Input
                     id="password"
                     type="password"
-                    placeholder="password"
+                    placeholder="Password"
                     autocomplete="current-password"
                     bind:value={password}
                 />

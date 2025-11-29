@@ -7,13 +7,23 @@
     import { authClient } from "$lib/auth-client";
     import { toast } from "svelte-sonner";
     import { goto } from "$app/navigation";
+    import { Turnstile } from "svelte-turnstile";
+    import { env } from "$env/dynamic/public";
 
     let firstName = "";
     let lastName = "";
     let email = "";
     let password = "";
     let passwordConfirmation = "";
+    let turnstileToken = "";
     let loading = false;
+
+    function handleTurnstile(e: CustomEvent) {
+        turnstileToken = e.detail.token;
+    }
+    function handleTurnstileExpired() {
+        turnstileToken = "";
+    }
 
     async function handleSignUp() {
         if (password !== passwordConfirmation) {
@@ -21,11 +31,16 @@
             return;
         }
 
+        if (!turnstileToken) {
+            toast.error("Please complete the captcha verification");
+            return;
+        }
+
         await authClient.signUp.email({
             email,
             password,
             name: `${firstName} ${lastName}`,
-            callbackURL: "/dashboard",
+            callbackURL: "/",
             fetchOptions: {
                 onRequest: () => {
                     loading = true;
@@ -38,6 +53,9 @@
                 },
                 onSuccess: async () => {
                     goto("/");
+                },
+                headers: {
+                    "x-captcha-response": turnstileToken
                 }
             }
         });
@@ -56,23 +74,22 @@
             <div class="grid grid-cols-2 gap-4">
                 <div class="grid gap-2">
                     <Label for="first-name">First name</Label>
-                    <Input id="first-name" placeholder="Max" required bind:value={firstName} />
+                    <Input
+                        id="first-name"
+                        placeholder="First name"
+                        required
+                        bind:value={firstName}
+                    />
                 </div>
                 <div class="grid gap-2">
                     <Label for="last-name">Last name</Label>
-                    <Input id="last-name" placeholder="Robinson" required bind:value={lastName} />
+                    <Input id="last-name" placeholder="Last name" required bind:value={lastName} />
                 </div>
             </div>
 
             <div class="grid gap-2">
                 <Label for="email">Email</Label>
-                <Input
-                    id="email"
-                    type="email"
-                    placeholder="m@example.com"
-                    required
-                    bind:value={email}
-                />
+                <Input id="email" type="email" placeholder="Email" required bind:value={email} />
             </div>
 
             <div class="grid gap-2">
@@ -96,6 +113,14 @@
                     placeholder="Confirm Password"
                 />
             </div>
+
+            <Turnstile
+                siteKey={env.PUBLIC_TURNSTILE_SITE_KEY}
+                theme="auto"
+                size="flexible"
+                on:callback={handleTurnstile}
+                on:expired={handleTurnstileExpired}
+            />
 
             <Button type="submit" class="w-full" disabled={loading} onclick={handleSignUp}>
                 {#if loading}
