@@ -47,7 +47,10 @@
     },
     "dependencies": {
         "better-auth": "^1.4.3",
+        "drizzle-kit": "^0.31.7",
+        "drizzle-orm": "^0.44.7",
         "lucide-svelte": "^0.555.0",
+        "postgres": "^3.4.7",
         "svelte-sonner": "^1.0.6"
     }
 }
