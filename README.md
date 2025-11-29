@@ -27,3 +27,14 @@ ssr: {
 pnpm add drizzle-orm postgres
 ```
 
+```bash
+npx @better-auth/cli generate
+npx drizzle-kit generate
+```
+
+`.env`:
+
+```
+BETTER_AUTH_SECRET=xxxxxxxxxxxxxxxxxxxxxxxxxx
+BETTER_AUTH_DB_URL=postgresql://postgres.xxxxxxxxxxxxxxx:[PASSWORD]@aws-1-us-east-2.pooler.supabase.com:6543/postgres
+```
