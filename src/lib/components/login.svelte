@@ -9,13 +9,30 @@
     import { authClient } from "$lib/auth-client";
     import { Loader } from "lucide-svelte";
     import { toast } from "svelte-sonner";
+    import { Turnstile } from "svelte-turnstile";
+    import { env } from "$env/dynamic/public";
 
     let email = "";
     let password = "";
     let loading = false;
     let rememberMe = false;
+    let turnstileToken = "";
+
+
+    function handleTurnstile(e: CustomEvent) {
+        turnstileToken = e.detail.token;
+    }
+    function handleTurnstileExpired() {
+        turnstileToken = "";
+    }
+
 
     async function handleSignIn() {
+        if (!turnstileToken) {
+            toast.error("Please complete the captcha verification");
+            return;
+        }
+
         const returnUrl = page.url.searchParams.get("return_to") || "/";
 
         await authClient.signIn.email(
@@ -23,7 +40,12 @@
                 email,
                 password,
                 rememberMe,
-                callbackURL: returnUrl
+                callbackURL: returnUrl,
+                fetchOptions: {
+                    headers: {
+                        "x-captcha-response": turnstileToken
+                    }
+                }
             },
             {
                 onRequest: () => {
@@ -37,8 +59,8 @@
                     const returnTo = page.url.searchParams.get("return_to") || "/";
                     await goto(returnTo, { invalidateAll: true });
                 },
-                onError: (ctx) => {
-                    toast.error(ctx.error.message || "Failed to sign in");
+                onError: (ctx: any) => {
+                    toast.error(ctx.error?.message || "Failed to sign in");
                 }
             }
         );
@@ -86,6 +108,14 @@
                 <Checkbox id="remember" bind:checked={rememberMe} />
                 <Label for="remember">Remember me</Label>
             </div>
+
+            <Turnstile
+                siteKey={env.PUBLIC_TURNSTILE_SITE_KEY}
+                theme="auto"
+                size="flexible"
+                on:callback={handleTurnstile}
+                on:expired={handleTurnstileExpired}
+            />
 
             <Button type="submit" class="w-full" disabled={loading} onclick={handleSignIn}>
                 {#if loading}
